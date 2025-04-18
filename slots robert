@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Казино слоты</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            width: 100%;
+        }
+        
+        .slots {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            font-size: 50px;
+            height: 70px;
+            overflow: hidden;
+        }
+        
+        .slot {
+            width: 60px;
+            text-align: center;
+            transition: transform 0.5s ease-out;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 27px;
+        }
+        
+        .win {
+            color: #28a745;
+        }
+        
+        .lose {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎰 Казино 🎰</h1>
+        <div class="slots">
+            <div class="slot" id="slot1">🍒</div>
+            <div class="slot" id="slot2">🍋</div>
+            <div class="slot" id="slot3">🍊</div>
+        </div>
+        <button id="spinButton">Испытать удачу</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const emojis = ['🍒', '🍋', '🍊', '🍇', '🍉', '🍓', '7️⃣'];
+        const spinButton = document.getElementById('spinButton');
+        const resultDiv = document.getElementById('result');
+        const slots = [
+            document.getElementById('slot1'),
+            document.getElementById('slot2'),
+            document.getElementById('slot3')
+        ];
+        
+        // Инициализация Telegram WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        
+        let isSpinning = false;
+        
+        function getRandomEmoji() {
+            return emojis[Math.floor(Math.random() * emojis.length)];
+        }
+        
+        function spinSlot(slotElement, duration, finalEmoji) {
+            const startTime = Date.now();
+            const spinInterval = setInterval(() => {
+                slotElement.textContent = getRandomEmoji();
+            }, 100);
+            
+            setTimeout(() => {
+                clearInterval(spinInterval);
+                slotElement.textContent = finalEmoji;
+            }, duration);
+        }
+        
+        function checkWin(slotValues) {
+            // Все три одинаковые - большой выигрыш
+            if (slotValues[0] === slotValues[1] && slotValues[1] === slotValues[2]) {
+                return { win: true, message: 'Джекпот! 🎉' };
+            }
+            
+            // Два одинаковых - маленький выигрыш
+            if (slotValues[0] === slotValues[1] || 
+                slotValues[1] === slotValues[2] || 
+                slotValues[0] === slotValues[2]) {
+                return { win: true, message: 'Маленький выигрыш! 👍' };
+            }
+            
+            // Нет совпадений
+            return { win: false, message: 'Попробуйте еще раз! 😊' };
+        }
+        
+        spinButton.addEventListener('click', () => {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            spinButton.disabled = true;
+            resultDiv.textContent = '';
+            resultDiv.className = 'result';
+            
+            // Генерируем финальные значения для слотов
+            const finalValues = [
+                getRandomEmoji(),
+                getRandomEmoji(),
+                getRandomEmoji()
+            ];
+            
+            // Запускаем анимацию для каждого слота с разной длительностью
+            spinSlot(slots[0], 1000, finalValues[0]);
+            spinSlot(slots[1], 1500, finalValues[1]);
+            spinSlot(slots[2], 2000, finalValues[2]);
+            
+            // После завершения анимации проверяем результат
+            setTimeout(() => {
+                const result = checkWin(finalValues);
+                resultDiv.textContent = result.message;
+                resultDiv.classList.add(result.win ? 'win' : 'lose');
+                
+                isSpinning = false;
+                spinButton.disabled = false;
+                
+                // Вибрация при выигрыше
+                if (result.win && Telegram.WebApp.HapticFeedback) {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                }
+            }, 2100);
+        });
+    </script>
+</body>
+</html>
